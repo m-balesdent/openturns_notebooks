@@ -30,6 +30,35 @@ import numpy as np
 import copy
 import openturns as ot
 
+
+## Container of CE results
+class CEResult(ot.SimulationResult):
+    def __init__(self):
+        self.ProbabilityEstimate = None
+        self.Samples = None
+        self.aux_distrib = None
+        
+    def getProbabilityEstimate(self):
+        return self.ProbabilityEstimate
+    
+    def setProbabilityEstimate(self,proba):
+        self.ProbabilityEstimate = proba
+        return None
+    
+    def getSamples(self):
+        return self.Samples
+    
+    def setCESamples(self,samples):
+        self.Samples = samples
+        return None
+        
+    def getAuxiliaryDensity(self):
+        return self.aux_distrib 
+    
+    def setAuxiliaryDensity(self,density):
+        self.aux_distrib  = density
+        return None
+        
 class CrossEntropyAlgorithm(object):
     def __init__(self,event,n_IS,rho_quantile,aux_distribution,active_parameters,bounds,initial_theta,verbose = False):
         
@@ -52,6 +81,7 @@ class CrossEntropyAlgorithm(object):
         self.bounds = bounds #bounds of the active parameters
         self.initial_theta = initial_theta #initial values of the active parameters
         self.dim_theta = len(initial_theta) #dimension of active parameters
+        self.result = CEResult()
         
 		#Check of active parameters list validity
         if len(self.active_parameters )!=len(self.aux_distrib.getParameter()):
@@ -87,7 +117,7 @@ class CrossEntropyAlgorithm(object):
 
 
 	#main function that computes the failure probability
-    def compute_proba(self):
+    def run(self):
         
         bounds = self.bounds
         if self.operator(self.S,self.S+1) == True:
@@ -146,18 +176,15 @@ class CrossEntropyAlgorithm(object):
         
         self.proba = proba
         self.samples = Sample
-        return 
-    
-    
-        #Accessor to the failure probability
-    def getFailureProbability(self):
-            return self.proba
-
-        #Accessor to the IS samples
-    def getCESamples(self):
-            return self.samples
         
-        #Accessor to the auxiliary distribution
-    def getaux_density(self):
-            return self.aux_distrib
+        # Save of data in SimulationResult structure
+        self.result.setProbabilityEstimate(proba)
+        self.result.setCESamples(Sample)
+        self.result.setAuxiliaryDensity(self.aux_distrib)
+        return None
+    
+    #Accessor to results
+    def getResult(self):
+        return self.result
+    
         
