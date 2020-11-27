@@ -24,6 +24,36 @@ import openturns as ot
 import math as m
 
 
+
+
+## Container of NAIS results
+class NAISResult(ot.SimulationResult):
+    def __init__(self):
+        self.ProbabilityEstimate = None
+        self.Samples = None
+        self.aux_distrib = None
+        
+    def getProbabilityEstimate(self):
+        return self.ProbabilityEstimate
+    
+    def setProbabilityEstimate(self,proba):
+        self.ProbabilityEstimate = proba
+        return None
+    
+    def getSamples(self):
+        return self.Samples
+    
+    def setNAISSamples(self,samples):
+        self.Samples = samples
+        return None
+        
+    def getAuxiliaryDensity(self):
+        return self.aux_distrib 
+    
+    def setAuxiliaryDensity(self,density):
+        self.aux_distrib  = density
+        return None
+
 class NAISAlgorithm(object):
     def __init__(self,event,n_IS,rho_quantile):
         self.n_IS = n_IS
@@ -42,7 +72,8 @@ class NAISAlgorithm(object):
         self.outputsamples = None  # Current output samples
         self.operator = failure_condition # event operator
         self.weights = None
-        
+        self.result = NAISResult()
+
 	#function computing the auxiliary distribution as a function of current samples and associated weights
     def compute_aux_distribution(self,sample,weights):
     
@@ -86,7 +117,7 @@ class NAISAlgorithm(object):
         return weights
                 
 	#main function that computes the failure probability    
-    def compute_proba(self):
+    def run(self):
         
         k = 1
         sample = self.distrib.getSample(self.n_IS) # drawing of samples using initial density
@@ -125,17 +156,19 @@ class NAISAlgorithm(object):
         self.proba = proba 
         self.samples = sample
         self.aux_distrib = aux_distrib
-        return 
-    
-    
-        #Accessor to the failure probability
-    def getFailureProbability(self):
-            return self.proba
-
-        #Accessor to the IS samples
-    def getCESamples(self):
-            return self.samples
         
-        #Accessor to the auxiliary distribution
-    def getaux_density(self):
-            return self.aux_distrib
+        
+        # Save of data in SimulationResult structure
+        self.result.setProbabilityEstimate(proba)
+        self.result.setNAISSamples(sample)
+        self.result.setAuxiliaryDensity(self.aux_distrib)
+        
+        
+        return None
+    
+    
+    #Accessor to results
+    def getResult(self):
+        return self.result
+    
+    
