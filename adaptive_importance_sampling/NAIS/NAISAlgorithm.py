@@ -11,20 +11,14 @@ in Complex Aerospace and Other Systems, A Practical Approach, Elsevier, 2015
 
 """
 
-
-
 ### Parameters of the class
 # event : ThresholdEvent based on composite vector of input variables on limit state function 
 # n_IS : number of IS samples at each step (integer)
 # rho_quantile : percentage of points that are in the local failure domain (float between 0 and 100)
 
-
 import numpy as np
 import openturns as ot
 import math as m
-
-
-
 
 ## Container of NAIS results
 class NAISResult(ot.SimulationResult):
@@ -62,6 +56,10 @@ class NAISAlgorithm(object):
         self.dim = event.getAntecedent().getDimension() #dimension of input space
         self.proba = 0.
         self.distrib = event.getAntecedent().getDistribution() #initial distribution
+        range_ = self.distrib.getRange() #verification of unbounded distribution 
+        if np.max(range_.getFiniteUpperBound())>0 or np.max(range_.getFiniteUpperBound())>0 :
+            raise ValueError('Current version of NAIS is only adapted to unbounded distribution')
+			
         failure_condition =  event.getOperator() 
         if failure_condition(0,1) == True:
             self.rho_quantile = rho_quantile/100 #definition of rho quantile if exceedance probability
@@ -127,8 +125,6 @@ class NAISAlgorithm(object):
         weights = self.compute_weights(sample,resp_sample,quantile_courant,self.distrib) #computation of weights
         aux_distrib = self.compute_aux_distribution(sample,weights) #computation of auxiliary distribution
         
-		
-		
         while self.operator(self.S,quantile_courant):
         
             sample = aux_distrib.getSample(self.n_IS) # drawing of samples using auxiliary density
@@ -141,7 +137,6 @@ class NAISAlgorithm(object):
                 weights = self.compute_weights(sample,resp_sample,quantile_courant,aux_distrib) #computation of weights
                 aux_distrib = self.compute_aux_distribution(sample,weights) #update of auxiliary distribution
 
-				
         #Estimation of failure probability
         y= np.array([self.operator(resp_sample[i][0],self.S) for i in range(resp_sample.getSize())])  #find failure points
         indices_critic=np.where(y==True)[0].tolist() # find failure samples indices
