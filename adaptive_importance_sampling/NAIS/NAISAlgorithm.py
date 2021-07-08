@@ -56,7 +56,7 @@ class NAISAlgorithm(object):
         self.dim = event.getAntecedent().getDimension() #dimension of input space
         self.proba = 0.
         self.distrib = event.getAntecedent().getDistribution() #initial distribution
-        range_ = self.distrib.getRange() #verification of unbounded distribution 
+        range_ = self.distrib.getRange() #verification of unbounded distribution
         if np.max(range_.getFiniteUpperBound())>0 or np.max(range_.getFiniteUpperBound())>0 :
             raise ValueError('Current version of NAIS is only adapted to unbounded distribution')
 			
