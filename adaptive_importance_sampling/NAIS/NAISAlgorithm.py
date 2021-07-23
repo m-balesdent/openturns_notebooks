@@ -67,9 +67,9 @@ class NAISAlgorithm(object):
             self.rho_quantile = 1- rho_quantile/100 #definition of rho quantile in case g<0
         self.nb_eval = 0 #Current number of evaluations ## Type : integer
         self.samples = None # Current input samples ## Type : Sample
-        self.outputsamples = None  # Current output samples #### a supprimer
+        self.outputsamples = None  # Current output samples
         self.operator = failure_condition # event operator ## type: ComparisonOperator
-        self.weights = None #### a supprimer
+        self.weights = None 
         self.result = NAISResult() ## type : NAISresult
 
 	#function computing the auxiliary distribution as a function of current samples and associated weights
@@ -157,7 +157,8 @@ class NAISAlgorithm(object):
         self.result.setProbabilityEstimate(proba)
         self.result.setNAISSamples(sample)
         self.result.setAuxiliaryDensity(self.aux_distrib)
-        
+        self.weights = weights ## modif 23/07
+        self.outputsamples = resp_sample  ## modif 23/07        
         
         return None
     
