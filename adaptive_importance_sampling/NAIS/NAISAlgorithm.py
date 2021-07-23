@@ -50,27 +50,27 @@ class NAISResult(ot.SimulationResult):
 
 class NAISAlgorithm(object):
     def __init__(self,event,n_IS,rho_quantile):
-        self.n_IS = n_IS
-        self.limit_state_function = event.getFunction() #limit state function
-        self.S = event.getThreshold() #Failure threshold
-        self.dim = event.getAntecedent().getDimension() #dimension of input space
-        self.proba = 0.
-        self.distrib = event.getAntecedent().getDistribution() #initial distribution
-        range_ = self.distrib.getRange() #verification of unbounded distribution
-        if np.max(range_.getFiniteUpperBound())>0 or np.max(range_.getFiniteUpperBound())>0 :
+        self.n_IS = n_IS ##type : integer
+        self.limit_state_function = event.getFunction() #limit state function ##type : Function
+        self.S = event.getThreshold() #Failure threshold ##type : float
+        self.dim = event.getAntecedent().getDimension() #dimension of input space ##type : integer
+        self.proba = 0. ## type : float
+        self.distrib = event.getAntecedent().getDistribution() #initial distribution ##type : ComposedDistribution
+        range_ = self.distrib.getRange() #verification of unbounded distribution ## type : Interval
+        if np.max(range_.getFiniteUpperBound())>0 or np.max(range_.getFiniteLowerBound())>0 : ## modif 23/07
             raise ValueError('Current version of NAIS is only adapted to unbounded distribution')
 			
-        failure_condition =  event.getOperator() 
+        failure_condition =  event.getOperator() ## type: ComparisonOperator
         if failure_condition(0,1) == True:
-            self.rho_quantile = rho_quantile/100 #definition of rho quantile if exceedance probability
+            self.rho_quantile = rho_quantile/100 #definition of rho quantile if exceedance probability ## type : float
         else:
             self.rho_quantile = 1- rho_quantile/100 #definition of rho quantile in case g<0
-        self.nb_eval = 0 #Current number of evaluations
-        self.samples = None # Current input samples
-        self.outputsamples = None  # Current output samples
-        self.operator = failure_condition # event operator
-        self.weights = None
-        self.result = NAISResult()
+        self.nb_eval = 0 #Current number of evaluations ## Type : integer
+        self.samples = None # Current input samples ## Type : Sample
+        self.outputsamples = None  # Current output samples #### a supprimer
+        self.operator = failure_condition # event operator ## type: ComparisonOperator
+        self.weights = None #### a supprimer
+        self.result = NAISResult() ## type : NAISresult
 
 	#function computing the auxiliary distribution as a function of current samples and associated weights
     def compute_aux_distribution(self,sample,weights):
@@ -88,7 +88,7 @@ class NAISAlgorithm(object):
             for i in range(self.n_IS):
                 dist_coll.append(ot.Normal(sample[i][k],silverman[k]))
             
-            distri_margin = ot.Mixture(dist_coll,weights.tolist()[0])
+            distri_margin = ot.Mixture(dist_coll,weights.tolist()) ## modif 23/07
             margins.append(distri_margin)      
         
         aux_distrib = ot.ComposedDistribution(margins)  
@@ -110,7 +110,7 @@ class NAISAlgorithm(object):
         f_value = self.distrib.computePDF(samples)
         g_value=aux_distrib.computePDF(samples)
         fraction = np.array(f_value)/np.array(g_value)
-        weights = self.is_failure(resp_samples,S_loc).T*fraction
+        weights = self.is_failure(resp_samples,S_loc).T[0]*fraction.T[0] ## modif 23/07
         
         return weights
                 
@@ -118,12 +118,12 @@ class NAISAlgorithm(object):
     def run(self):
         
         k = 1
-        sample = self.distrib.getSample(self.n_IS) # drawing of samples using initial density
-        resp_sample = self.limit_state_function(sample) #evaluation on limit state function
-        quantile_courant = resp_sample.computeQuantile(self.rho_quantile)[0] #computation of current quantile
+        sample = self.distrib.getSample(self.n_IS) # drawing of samples using initial density ## type: Sample
+        resp_sample = self.limit_state_function(sample) #evaluation on limit state function ## type : Sample
+        quantile_courant = resp_sample.computeQuantile(self.rho_quantile)[0] #computation of current quantile ##type : float
         
-        weights = self.compute_weights(sample,resp_sample,quantile_courant,self.distrib) #computation of weights
-        aux_distrib = self.compute_aux_distribution(sample,weights) #computation of auxiliary distribution
+        weights = self.compute_weights(sample,resp_sample,quantile_courant,self.distrib) #computation of weights ## type : array
+        aux_distrib = self.compute_aux_distribution(sample,weights) #computation of auxiliary distribution ##type : ComposedDistribution
         
         while self.operator(self.S,quantile_courant):
         
@@ -138,17 +138,17 @@ class NAISAlgorithm(object):
                 aux_distrib = self.compute_aux_distribution(sample,weights) #update of auxiliary distribution
 
         #Estimation of failure probability
-        y= np.array([self.operator(resp_sample[i][0],self.S) for i in range(resp_sample.getSize())])  #find failure points
+        y= np.array([self.operator(resp_sample[i][0],self.S) for i in range(resp_sample.getSize())])  #find failure points # type : array of boolean
         indices_critic=np.where(y==True)[0].tolist() # find failure samples indices
         
-        resp_sample_critic = resp_sample.select(indices_critic)
-        sample_critic = sample.select(indices_critic)
+        resp_sample_critic = resp_sample.select(indices_critic) #type : Sample
+        sample_critic = sample.select(indices_critic) # #type : Sample
 
-        pdf_init_critic = self.distrib.computePDF(sample_critic) #evaluate initial PDF on failure samples
-        pdf_aux_critic = aux_distrib.computePDF(sample_critic) #evaluate auxiliary PDF on failure samples
+        pdf_init_critic = self.distrib.computePDF(sample_critic) #evaluate initial PDF on failure samples # #type : Sample
+        pdf_aux_critic = aux_distrib.computePDF(sample_critic) #evaluate auxiliary PDF on failure samples #type : Sample
 
-        proba = 1/self.n_IS * np.sum(np.array([pdf_init_critic])/np.array([pdf_aux_critic])) #Calculation of failure probability
-        self.proba = proba 
+        proba = 1/self.n_IS * np.sum(np.array([pdf_init_critic])/np.array([pdf_aux_critic])) #Calculation of failure probability #type : float
+        self.proba = proba
         self.samples = sample
         self.aux_distrib = aux_distrib
         
