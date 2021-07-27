@@ -117,7 +117,6 @@ class NAISAlgorithm(object):
 	#main function that computes the failure probability    
     def run(self):
         
-        k = 1
         sample = self.distrib.getSample(self.n_IS) # drawing of samples using initial density ## type: Sample
         resp_sample = self.limit_state_function(sample) #evaluation on limit state function ## type : Sample
         quantile_courant = resp_sample.computeQuantile(self.rho_quantile)[0] #computation of current quantile ##type : float
