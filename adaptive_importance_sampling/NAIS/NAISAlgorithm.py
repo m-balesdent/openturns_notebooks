@@ -1,9 +1,8 @@
 
 """
 Non parametric Adaptive Importance Sampling algorithm
-Python implementation of adaptive Importance Sampling by Cross Entropy 
-M. Balesdent and L. Brevault of ONERA, the French Aerospace Lab for the 
-openTURNS consortium
+Python implementation of Non adaptive Importance Sampling by 
+ONERA, the French Aerospace Lab for the openTURNS consortium
 
 source :  J. Morio & M. Balesdent, Estimation of Rare Event Probabilities 
 in Complex Aerospace and Other Systems, A Practical Approach, Elsevier, 2015
