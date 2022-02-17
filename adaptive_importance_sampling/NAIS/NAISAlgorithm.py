@@ -120,12 +120,14 @@ class NAISAlgorithm(object):
         sample = self.distrib.getSample(self.n_IS) # drawing of samples using initial density ## type: Sample
         resp_sample = self.limit_state_function(sample) #evaluation on limit state function ## type : Sample
         quantile_courant = resp_sample.computeQuantile(self.rho_quantile)[0] #computation of current quantile ##type : float
-        
-        weights = self.compute_weights(sample,resp_sample,quantile_courant,self.distrib) #computation of weights ## type : array
-        aux_distrib = self.compute_aux_distribution(sample,weights) #computation of auxiliary distribution ##type : ComposedDistribution
-        
-        while self.operator(self.S,quantile_courant):
-        
+        if self.operator(quantile_courant,self.S):
+                quantile_courant = self.S
+                weights = None
+                aux_distrib = self.distrib
+        else:
+            weights = self.compute_weights(sample,resp_sample,quantile_courant,self.distrib) #computation of weights ## type : array
+            aux_distrib = self.compute_aux_distribution(sample,weights) #computation of auxiliary distribution ##type : ComposedDistribution
+        while self.operator(self.S,quantile_courant) and quantile_courant != self.S:
             sample = aux_distrib.getSample(self.n_IS) # drawing of samples using auxiliary density
             resp_sample = self.limit_state_function(sample) #evaluation on limit state function
             quantile_courant = resp_sample.computeQuantile(self.rho_quantile)[0] #computation of current quantile
@@ -145,7 +147,7 @@ class NAISAlgorithm(object):
 
         pdf_init_critic = self.distrib.computePDF(sample_critic) #evaluate initial PDF on failure samples # #type : Sample
         pdf_aux_critic = aux_distrib.computePDF(sample_critic) #evaluate auxiliary PDF on failure samples #type : Sample
-
+        
         proba = 1/self.n_IS * np.sum(np.array([pdf_init_critic])/np.array([pdf_aux_critic])) #Calculation of failure probability #type : float
         self.proba = proba
         self.samples = sample
@@ -165,5 +167,3 @@ class NAISAlgorithm(object):
     #Accessor to results
     def getResult(self):
         return self.result
-    
-    
