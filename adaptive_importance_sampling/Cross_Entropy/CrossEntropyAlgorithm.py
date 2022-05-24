@@ -144,7 +144,7 @@ class CrossEntropyAlgorithm(object):
             problem.setBounds(bounds)
             problem.setMinimization(False)
 
-            algo_optim = ot.Dlib(problem,'Global')
+            algo_optim = ot.Dlib(problem,'global')
             algo_optim.setMaximumIterationNumber(50000) 
             algo_optim.setStartingPoint(theta_0)
             algo_optim.run() #Run of CE optimization
